@@ -12,11 +12,14 @@ public class Hero : MonoBehaviour
     public float pitchMult = 30;
     public GameObject projectilePrefab;
     public float projectileSpeed = 40;
+    public Weapon[] weapons;
 
     [Header("Dynamic")][Range(0,4)][SerializeField]
-    private float _shieldLevel = 1;
+    private float _shieldLevel = 4;
     [Tooltip ("This field holds a reference to the last triggering GameObject")]
     private GameObject lastTriggerGo = null;
+    public delegate void WeaponFireDelegate();
+    public event WeaponFireDelegate fireEvent;
 
     void Awake(){
         if(S == null){
@@ -25,6 +28,9 @@ public class Hero : MonoBehaviour
         else{
             Debug.LogError("Hero.Awake() - Attempted to assign second Hero.S!");
         }
+
+        ClearWeapons();
+        weapons[0].SetType(eWeaponType.blaster);
     }
 
     void Update(){
@@ -38,15 +44,10 @@ public class Hero : MonoBehaviour
 
         transform.rotation = Quaternion.Euler(vAxis*pitchMult, hAxis*rollMult, 0);
 
-        if(Input.GetKeyDown(KeyCode.Space)){
-            TempFire();
+        if(Input.GetAxis("Jump") == 1 && fireEvent != null){
+
+            fireEvent();
         }
-    }
-    void TempFire(){
-        GameObject projGO = Instantiate<GameObject>(projectilePrefab);
-        projGO.transform.position = transform.position;
-        Rigidbody rigidB = projGO.GetComponent<Rigidbody>();
-        rigidB.linearVelocity = Vector3.up * projectileSpeed;
     }
 
     void OnTriggerEnter(Collider other) {
@@ -58,12 +59,38 @@ public class Hero : MonoBehaviour
         lastTriggerGo = go;
 
         Enemy enemy = go.GetComponent<Enemy>();
+        PowerUp pUp = go.GetComponent<PowerUp>();
         if(enemy != null){
             shieldLevel--;
             Destroy(go);
-        }else{
+        }else if(pUp != null){
+            AbsorbPowerUp(pUp);
+        }
+        else{
             Debug.LogWarning("Shield Trigger hit by non-Enemy: " +go.name);
         }
+    }
+
+    public void AbsorbPowerUp(PowerUp pUp ){
+        Debug.Log("Absorbed PowerUp: " + pUp.type);
+        switch(pUp.type){
+            case eWeaponType.shield:
+            shieldLevel++;
+            break;
+
+            default:
+            if(pUp.type == weapons[0].type){
+                Weapon weap = GetEmptyWeaponSlot();
+                if(weap != null){
+                weap.SetType(pUp.type);
+                }
+            }else{
+                ClearWeapons();
+                weapons[0].SetType(pUp.type);
+            }
+            break;
+        }
+        pUp.AbsorbedBy(this.gameObject);
     }
 
     public float shieldLevel{
@@ -77,4 +104,18 @@ public class Hero : MonoBehaviour
         }
     }
 
+    Weapon GetEmptyWeaponSlot(){
+        for(int i = 0; i<weapons.Length; i++){
+            if(weapons[i].type == eWeaponType.none){
+                return(weapons[i]);
+            }
+        }
+        return(null);
+    }
+
+    void ClearWeapons(){
+        foreach(Weapon w in weapons){
+            w.SetType(eWeaponType.none);
+        }
+    }
 }
