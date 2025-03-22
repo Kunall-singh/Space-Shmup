@@ -13,6 +13,10 @@ public class Hero : MonoBehaviour
     public GameObject projectilePrefab;
     public float projectileSpeed = 40;
     public Weapon[] weapons;
+    public bool isInvincible = false;
+    private Material[] heroMaterials;
+    private Color[] originalColors;
+    public Color blinkColor = Color.white;
 
     [Header("Dynamic")][Range(0,4)][SerializeField]
     private float _shieldLevel = 4;
@@ -31,6 +35,14 @@ public class Hero : MonoBehaviour
 
         ClearWeapons();
         weapons[0].SetType(eWeaponType.blaster);
+        Renderer[] rends = GetComponentsInChildren<Renderer>();
+        heroMaterials = new Material[rends.Length];
+        originalColors = new Color[rends.Length];
+
+        for (int i = 0; i < rends.Length; i++) {
+            heroMaterials[i] = rends[i].material;
+            originalColors[i] = heroMaterials[i].color;
+        }
     }
 
     void Update(){
@@ -61,7 +73,9 @@ public class Hero : MonoBehaviour
         Enemy enemy = go.GetComponent<Enemy>();
         PowerUp pUp = go.GetComponent<PowerUp>();
         if(enemy != null){
-            shieldLevel--;
+            if(!isInvincible){
+                shieldLevel--;
+            }
             Destroy(go);
         }else if(pUp != null){
             AbsorbPowerUp(pUp);
@@ -79,10 +93,15 @@ public class Hero : MonoBehaviour
             break;
 
             default:
+            if (pUp.type == eWeaponType.invincibility) {
+                StartCoroutine(TempInvincibility());
+                break;
+            }
+
             if(pUp.type == weapons[0].type){
                 Weapon weap = GetEmptyWeaponSlot();
                 if(weap != null){
-                weap.SetType(pUp.type);
+                    weap.SetType(pUp.type);
                 }
             }else{
                 ClearWeapons();
@@ -117,5 +136,33 @@ public class Hero : MonoBehaviour
         foreach(Weapon w in weapons){
             w.SetType(eWeaponType.none);
         }
+    }
+    IEnumerator TempInvincibility() {
+        isInvincible = true;
+        Debug.Log("Invincible!");
+
+        float blinkDuration = 7f;
+        float blinkRate = 0.1f;
+        float timer = 0f;
+        bool showBlink = false;
+
+        while (timer < blinkDuration) {
+            showBlink = !showBlink;
+
+            for (int i = 0; i < heroMaterials.Length; i++) {
+                heroMaterials[i].color = showBlink ? blinkColor : originalColors[i];
+            }
+
+            yield return new WaitForSeconds(blinkRate);
+            timer += blinkRate;
+        }
+
+        // Reset to normal
+        for (int i = 0; i < heroMaterials.Length; i++) {
+            heroMaterials[i].color = originalColors[i];
+        }
+
+        isInvincible = false;
+        Debug.Log("Back to normal");
     }
 }

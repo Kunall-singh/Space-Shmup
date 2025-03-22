@@ -122,6 +122,8 @@ MonoBehaviour:
   health: 10
   score: 100
   powerUpDropChance: 0.25
+  bulletPrefab: {fileID: 1379546467153691646, guid: 0a48a8a3d173893408a80ecc6edd22c4, type: 3}
+  fireInterval: 2
 --- !u!114 &-7879876939104377898
 MonoBehaviour:
   m_ObjectHideFlags: 0

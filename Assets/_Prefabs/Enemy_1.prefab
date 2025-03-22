@@ -80,6 +80,8 @@ MonoBehaviour:
   health: 10
   score: 100
   powerUpDropChance: 0.5
+  bulletPrefab: {fileID: 1379546467153691646, guid: 0a48a8a3d173893408a80ecc6edd22c4, type: 3}
+  fireInterval: 2
   waveFrequency: 2
   waveWidth: 4
   waveRotY: 45

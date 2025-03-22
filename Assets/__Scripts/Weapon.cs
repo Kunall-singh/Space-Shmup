@@ -9,7 +9,8 @@ public enum eWeaponType{
     phaser,
     missile,
     laser,
-    shield
+    shield,
+    invincibility
 }
 
 [System.Serializable]
@@ -80,11 +81,14 @@ public class Weapon : MonoBehaviour
         }
         def = Main.GET_WEAPON_DEFINITION(_type);
         if(weaponModel != null ) Destroy(weaponModel);
+
+        if (def.weaponModelPrefab != null) {
         weaponModel = Instantiate<GameObject>(def.weaponModelPrefab, transform);
         weaponModel.transform.localPosition = Vector3.zero;
         weaponModel.transform.localScale = Vector3.one;
 
         nextShotTime = 0;
+        }
     }
     private void Fire()
     {
@@ -115,34 +119,15 @@ public class Weapon : MonoBehaviour
                 p.vel = p.transform.rotation * vel;
                 break;
 
-            // case WeaponType.phaser:
-            //     // Phaser: could add wave-like motion behavior.
-            //     p = MakeProjectile();
-            //     p.rigid.linearVelocity = vel;
-            //     // For example, add a component to handle sine-wave movement:
-            //     // p.gameObject.AddComponent<PhaserProjectile>();
-            //     break;
+            case eWeaponType.phaser:
+                p = MakeProjectile();
+                p.rigid.linearVelocity = vel;
+                break;
 
-            // case WeaponType.missile:
-            //     // Missile: potentially slower with homing behavior.
-            //     p = MakeProjectile();
-            //     p.rigid.linearVelocity = vel * 0.8f; // slightly slower speed
-            //     // Optionally, add a homing behavior script:
-            //     // p.gameObject.AddComponent<MissileHoming>();
-            //     break;
-
-            // case WeaponType.laser:
-            //     // Laser: could be a continuous beam or a projectile that lingers.
-            //     p = MakeProjectile();
-            //     p.rigid.linearVelocity = vel;
-            //     // Optionally, modify laser projectile properties such as lifetime or scale:
-            //     // p.gameObject.AddComponent<LaserBehavior>();
-            //     break;
-            
-            // case WeaponType.nuke:
-            //     p = MakeProjectile();
-            //     p.rigid.linearVelocity = vel;
-            //     break;
+            case eWeaponType.missile:
+                p = MakeProjectile();
+                p.rigid.linearVelocity = vel * 0.8f; 
+                break;
         }
     }
     private ProjectileHero MakeProjectile()
